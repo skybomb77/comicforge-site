@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儀表板 — ComicForge 漫鍛</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --bg:#0a0a0f; --panel:#12121a; --border:#1e1e2e; --text:#eee; --muted:#888; --accent:#f59e0b; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif; background:var(--bg); color:var(--text); }
+        a { color:var(--accent); text-decoration:none; }
+        .nav { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--border); }
+        .nav .logo { font-weight:700; cursor:pointer; }
+        .container { max-width:900px; margin:0 auto; padding:24px; }
+        h1 { font-size:1.5rem; margin-bottom:20px; }
+        .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:16px; }
+        .card h3 { margin-bottom:14px; font-size:.95rem; }
+        .card h3 i { color:var(--accent); margin-right:6px; }
+        .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+        .stat { background:rgba(0,0,0,.2); padding:16px; border-radius:10px; text-align:center; }
+        .stat .num { font-size:1.8rem; font-weight:800; }
+        .stat .label { font-size:.8rem; color:var(--muted); }
+        .bar { background:rgba(255,255,255,.05); border-radius:999px; height:6px; overflow:hidden; margin:10px 0; }
+        .bar .fill { height:100%; border-radius:999px; transition:width .3s; }
+        .projects { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+        .proj { background:rgba(0,0,0,.2); border-radius:10px; padding:16px; cursor:pointer; transition:all .2s; border:1px solid transparent; }
+        .proj:hover { border-color:var(--accent); }
+        .proj .title { font-weight:600; margin-bottom:4px; }
+        .proj .meta { font-size:.8rem; color:var(--muted); }
+        .proj .status { display:inline-block; font-size:.7rem; padding:2px 8px; border-radius:999px; margin-top:6px; }
+        .proj .status.done { background:rgba(34,197,94,.15); color:#22c55e; }
+        .proj .status.generating { background:rgba(245,158,11,.15); color:#f59e0b; }
+        .proj .status.error { background:rgba(239,68,68,.15); color:#ef4444; }
+        .empty { text-align:center; padding:40px; color:var(--muted); }
+        .loading { text-align:center; padding:40px; color:var(--muted); }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <div class="logo" onclick="location.href='index.html'">📖 ComicForge 漫鍛</div>
+    <div style="display:flex;gap:14px;">
+        <a href="app.html" style="font-size:.85rem;">創作</a>
+        <a href="#" onclick="CF.logout();return false;" style="font-size:.85rem;color:var(--muted);">登出</a>
+    </div>
+</nav>
+<div class="container">
+    <h1>儀表板</h1>
+    <div class="stats" id="stats">
+        <div class="stat"><div class="num" style="color:var(--accent);" id="usedNum">-</div><div class="label">已使用格數</div></div>
+        <div class="stat"><div class="num" style="color:#22c55e;" id="remainNum">-</div><div class="label">剩餘格數</div></div>
+        <div class="stat"><div class="num" id="planNum">-</div><div class="label">目前方案</div></div>
+    </div>
+    <div class="card">
+        <h3><i class="fa-solid fa-chart-bar"></i> 本月用量</h3>
+        <div class="bar"><div class="fill" id="usageBar" style="width:0%;background:var(--accent);"></div></div>
+        <p style="font-size:.85rem;color:var(--muted);" id="usageText">載入中...</p>
+    </div>
+    <div class="card">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> 漫畫專案</h3>
+        <div id="projectsList"><div class="loading">載入中...</div></div>
+    </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+if (!CF.requireLogin()) throw '';
+
+async function init() {
+    const [meRes, projRes] = await Promise.all([
+        CF.apiFetch('/api/me'),
+        CF.apiFetch('/api/projects')
+    ]);
+
+    if (meRes.ok) {
+        const u = meRes.data;
+        const li = u.limit_info;
+        const pct = li.limit > 0 ? Math.round(li.used / li.limit * 100) : 0;
+
+        document.getElementById('usedNum').textContent = li.used;
+        document.getElementById('remainNum').textContent = li.remaining;
+        document.getElementById('planNum').textContent = li.plan.toUpperCase();
+        document.getElementById('usageBar').style.width = pct + '%';
+        document.getElementById('usageBar').style.background = pct > 80 ? '#ef4444' : 'var(--accent)';
+        document.getElementById('usageText').textContent = `${li.used}/${li.limit} 格 (${pct}%)`;
+    }
+
+    if (projRes.ok) {
+        const projects = projRes.data;
+        const el = document.getElementById('projectsList');
+        if (projects.length === 0) {
+            el.innerHTML = '<div class="empty">尚無專案，<a href="app.html">開始創作！</a></div>';
+        } else {
+            el.innerHTML = '<div class="projects">' + projects.map(p => `
+                <div class="proj">
+                    <div class="title">${p.title || '未命名'}</div>
+                    <div class="meta">${p.style} · ${p.total_panels} 格 · ${new Date(p.created).toLocaleDateString('zh-TW')}</div>
+                    <div class="status ${p.status}">${p.status === 'done' ? '完成' : p.status === 'generating' ? '生成中' : p.status}</div>
+                </div>
+            `).join('') + '</div>';
+        }
+    }
+}
+init();
+</script>
+</body>
+</html>

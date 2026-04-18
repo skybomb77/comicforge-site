@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComicForge 漫鍛 — AI 漫畫生成器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --bg:#0a0a0f; --panel:#12121a; --border:#1e1e2e; --text:#eee; --muted:#888; --accent:#f59e0b; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+        a { color:var(--accent); text-decoration:none; }
+        .container { max-width:1100px; margin:0 auto; padding:0 24px; }
+        .btn { display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:12px; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+        .btn-primary { background:var(--accent); color:#0a0a0f; }
+        .btn-primary:hover { background:#e08e00; transform:translateY(-2px); box-shadow:0 8px 25px rgba(245,158,11,.25); }
+        .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+        .btn-outline:hover { border-color:var(--accent); }
+        nav { padding:20px 0; display:flex; justify-content:space-between; align-items:center; }
+        .logo { font-size:1.4rem; font-weight:800; }
+        .logo span { color:var(--accent); font-size:.85rem; margin-left:6px; opacity:.7; }
+        .hero { text-align:center; padding:80px 0 50px; }
+        .hero .brand { font-size:1.2rem; font-weight:800; color:var(--accent); margin-bottom:8px; }
+        .hero h1 { font-size:3rem; font-weight:800; margin-bottom:16px; background:linear-gradient(13deg,#fff,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .hero p { color:var(--muted); font-size:1.15rem; max-width:600px; margin:0 auto 32px; }
+        .proof { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; max-width:700px; margin:0 auto 40px; }
+        .proof .item { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px 12px; text-align:center; transition:all .2s; }
+        .proof .item:hover { border-color:var(--accent); transform:translateY(-3px); }
+        .proof .num { font-size:1.5rem; font-weight:800; color:var(--accent); }
+        .proof .label { font-size:.8rem; color:var(--muted); }
+        .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:60px 0; }
+        .step { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:32px; text-align:center; transition:all .2s; }
+        .step:hover { border-color:var(--accent); transform:translateY(-3px); }
+        .step .icon { font-size:2.5rem; margin-bottom:12px; }
+        .step h3 { margin-bottom:8px; }
+        .step p { color:var(--muted); font-size:.9rem; }
+        .styles { padding:60px 0; text-align:center; }
+        .styles h2 { font-size:2rem; margin-bottom:12px; }
+        .styles > p { color:var(--muted); margin-bottom:32px; }
+        .style-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+        .style-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:24px 16px; text-align:center; transition:all .2s; }
+        .style-card:hover { border-color:var(--accent); transform:translateY(-3px); }
+        .style-card .emoji { font-size:2.5rem; margin-bottom:8px; }
+        .style-card .name { font-weight:600; margin-bottom:4px; }
+        .style-card .desc { font-size:.8rem; color:var(--muted); }
+        .pricing { padding:60px 0; }
+        .pricing h2 { text-align:center; font-size:2rem; margin-bottom:40px; }
+        .pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+        .price-card { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:24px; text-align:center; position:relative; }
+        .price-card.featured { border-color:var(--accent); }
+        .price-card.featured::before { content:"推薦"; position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--accent); color:#0a0a0f; font-size:.65rem; font-weight:700; padding:3px 14px; border-radius:999px; }
+        .price-card .name { font-weight:600; margin-bottom:8px; }
+        .price-card .price { font-size:2rem; font-weight:800; margin:8px 0; }
+        .price-card .price span { font-size:.85rem; color:var(--muted); font-weight:400; }
+        .price-card .per { font-size:.8rem; color:var(--muted); margin-bottom:16px; }
+        .price-card ul { list-style:none; text-align:left; font-size:.85rem; margin-bottom:16px; }
+        .price-card ul li { padding:5px 0; border-bottom:1px solid var(--border); }
+        .price-card ul li i { color:var(--accent); margin-right:6px; }
+        .cta { text-align:center; padding:80px 0; }
+        .cta h2 { font-size:2rem; margin-bottom:16px; }
+        .cta p { color:var(--muted); margin-bottom:24px; }
+        footer { border-top:1px solid var(--border); padding:24px 0; text-align:center; color:var(--muted); font-size:.8rem; }
+        @media(max-width:768px) {
+            .hero h1 { font-size:2rem; }
+            .proof { grid-template-columns:repeat(2,1fr); }
+            .steps { grid-template-columns:1fr; }
+            .style-grid { grid-template-columns:repeat(2,1fr); }
+            .pricing-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav>
+        <div class="logo">📖 ComicForge <span>漫鍛</span></div>
+        <div id="navBtn"></div>
+    </nav>
+
+    <div class="hero">
+        <div class="brand">COMICFORGE STUDIO</div>
+        <h1>AI 一鍵生成漫畫</h1>
+        <p>上傳角色參考圖 → 輸入故事劇本 → AI 自動生成一致性多格漫畫，支援日系、美式、Webtoon 等風格</p>
+        <a href="app.html" class="btn btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> 開始創作</a>
+    </div>
+
+    <div class="proof">
+        <div class="item"><div class="num">6+</div><div class="label">漫畫風格</div></div>
+        <div class="item"><div class="num">IP</div><div class="label">角色一致性</div></div>
+        <div class="item"><div class="num">AI</div><div class="label">智慧對話框</div></div>
+        <div class="item"><div class="num">1格</div><div class="label">起就能用</div></div>
+    </div>
+
+    <div class="steps">
+        <div class="step">
+            <div class="icon">👤</div>
+            <h3>上傳角色圖</h3>
+            <p>上傳一張角色參考圖，AI 會在每一格保持角色外觀一致</p>
+        </div>
+        <div class="step">
+            <div class="icon">✍️</div>
+            <h3>撰寫劇本</h3>
+            <p>描述每一格的場景、動作，加上對話，想幾格就加幾格</p>
+        </div>
+        <div class="step">
+            <div class="icon">🎨</div>
+            <h3>一鍵生成</h3>
+            <p>選擇風格，按下生成，AI 自動繪製含對話框的完整漫畫</p>
+        </div>
+    </div>
+
+    <div class="styles" id="stylesSection">
+        <h2>6 種漫畫風格</h2>
+        <p>從日系黑白到美式英雄，找到你的風格</p>
+        <div class="style-grid" id="styleGrid"></div>
+    </div>
+
+    <div class="pricing">
+        <h2>方案價格</h2>
+        <div class="pricing-grid">
+            <div class="price-card">
+                <div class="name">Free</div>
+                <div class="price">NT$0</div>
+                <div class="per">永久免費</div>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> 20 格漫畫</li>
+                    <li><i class="fa-solid fa-check"></i> 全部風格</li>
+                    <li><i class="fa-solid fa-check"></i> 角色一致性</li>
+                </ul>
+                <a href="app.html" class="btn btn-outline" style="width:100%;justify-content:center;">免費開始</a>
+            </div>
+            <div class="price-card featured">
+                <div class="name">Pro</div>
+                <div class="price">NT$590<span>/月</span></div>
+                <div class="per">創作者首選</div>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> 200 格漫畫</li>
+                    <li><i class="fa-solid fa-check"></i> 優先生成</li>
+                    <li><i class="fa-solid fa-check"></i> 高解析輸出</li>
+                    <li><i class="fa-solid fa-check"></i> 無浮水印</li>
+                </ul>
+                <a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center;">升級 Pro</a>
+            </div>
+            <div class="price-card">
+                <div class="name">Studio</div>
+                <div class="price">NT$1,490<span>/月</span></div>
+                <div class="per">工作室方案</div>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> 1000 格漫畫</li>
+                    <li><i class="fa-solid fa-check"></i> 批次生成</li>
+                    <li><i class="fa-solid fa-check"></i> API 存取</li>
+                    <li><i class="fa-solid fa-check"></i> 優先支援</li>
+                </ul>
+                <a href="login.html" class="btn btn-outline" style="width:100%;justify-content:center;">選擇方案</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta">
+        <h2>開始創作你的漫畫</h2>
+        <p>免費 20 格，不需要信用卡</p>
+        <a href="app.html" class="btn btn-primary"><i class="fa-solid fa-rocket"></i> 立即體驗</a>
+    </div>
+
+    <footer>
+        ComicForge 漫鍛 — Kent & KClaw Studio © 2026
+    </footer>
+</div>
+
+<script src="config.js"></script>
+<script>
+// Nav button
+const navBtn = document.getElementById('navBtn');
+if (CF.isLoggedIn) {
+    navBtn.innerHTML = '<a href="dashboard.html" class="btn btn-outline" style="padding:8px 20px;font-size:.9rem;">儀表板</a>';
+} else {
+    navBtn.innerHTML = '<a href="login.html" class="btn btn-outline" style="padding:8px 20px;font-size:.9rem;">登入 / 註冊</a>';
+}
+
+// Load styles
+const STYLE_DESCS = {
+    'manga_bw': '黑白線條，網點陰影，經典日系',
+    'manga_color': '彩色動畫風，賽璐珞上色',
+    'webtoon': '韓系條漫，柔和配色',
+    'comic_west': '美式英雄，網點粗線',
+    'watercolor': '水彩繪本，夢幻柔和',
+    'chibi': 'Q版可愛，大頭小身'
+};
+
+fetch(CF.api + '/api/styles')
+    .then(r => r.json())
+    .then(styles => {
+        const grid = document.getElementById('styleGrid');
+        grid.innerHTML = styles.map(s => `
+            <div class="style-card">
+                <div class="emoji">${s.preview}</div>
+                <div class="name">${s.name}</div>
+                <div class="desc">${STYLE_DESCS[s.id] || ''}</div>
+            </div>
+        `).join('');
+    })
+    .catch(() => {
+        // Fallback if API is down
+        document.getElementById('styleGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">風格載入中...</p>';
+    });
+</script>
+</body>
+</html>
