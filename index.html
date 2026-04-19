@@ -206,7 +206,7 @@ function renderStyles(styles) {
     `).join('');
 }
 
-fetch(CF.api + '/api/styles')
+fetch(CF.api + '/api/styles', { headers: { 'ngrok-skip-browser-warning': 'true' } })
     .then(r => r.json())
     .then(styles => renderStyles(styles))
     .catch(() => renderStyles(FALLBACK_STYLES));

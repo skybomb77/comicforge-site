@@ -17,6 +17,7 @@ const CF = {
   // Authenticated fetch
   async apiFetch(path, opts = {}) {
     const headers = opts.headers || {};
+    headers['ngrok-skip-browser-warning'] = 'true';
     if (this.token) headers['Authorization'] = 'Bearer ' + this.token;
     if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
