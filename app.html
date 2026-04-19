@@ -151,7 +151,7 @@
 
 <script src="config.js"></script>
 <script>
-if (!CF.requireLogin()) throw '';
+if (!CF.requireLogin()) { /* redirect to login */ }
 
 let selectedStyle = '';
 let charFile = null;
@@ -173,6 +173,23 @@ async function init() {
         const styles = stylesRes.data;
         selectedStyle = styles[0].id;
         document.getElementById('styleGrid').innerHTML = styles.map((s, i) => `
+            <div class="style-opt ${i === 0 ? 'sel' : ''}" data-style="${s.id}" onclick="selStyle(this)">
+                <span class="emoji">${s.preview}</span>
+                ${s.name}
+            </div>
+        `).join('');
+    } else {
+        // Fallback styles
+        const fb = [
+            { id: 'manga_bw', name: '日系黑白', preview: '🖊️' },
+            { id: 'manga_color', name: '彩色動畫', preview: '🎨' },
+            { id: 'webtoon', name: '韓系條漫', preview: '📱' },
+            { id: 'comic_west', name: '美式英雄', preview: '🦸' },
+            { id: 'watercolor', name: '水彩繪本', preview: '🖌️' },
+            { id: 'chibi', name: 'Q版可愛', preview: '🐣' }
+        ];
+        selectedStyle = fb[0].id;
+        document.getElementById('styleGrid').innerHTML = fb.map((s, i) => `
             <div class="style-opt ${i === 0 ? 'sel' : ''}" data-style="${s.id}" onclick="selStyle(this)">
                 <span class="emoji">${s.preview}</span>
                 ${s.name}

@@ -186,22 +186,30 @@ const STYLE_DESCS = {
     'chibi': 'Q版可愛，大頭小身'
 };
 
+const FALLBACK_STYLES = [
+    { id: 'manga_bw', name: '日系黑白', preview: '🖊️' },
+    { id: 'manga_color', name: '彩色動畫', preview: '🎨' },
+    { id: 'webtoon', name: '韓系條漫', preview: '📱' },
+    { id: 'comic_west', name: '美式英雄', preview: '🦸' },
+    { id: 'watercolor', name: '水彩繪本', preview: '🖌️' },
+    { id: 'chibi', name: 'Q版可愛', preview: '🐣' }
+];
+
+function renderStyles(styles) {
+    const grid = document.getElementById('styleGrid');
+    grid.innerHTML = styles.map(s => `
+        <div class="style-card">
+            <div class="emoji">${s.preview}</div>
+            <div class="name">${s.name}</div>
+            <div class="desc">${STYLE_DESCS[s.id] || ''}</div>
+        </div>
+    `).join('');
+}
+
 fetch(CF.api + '/api/styles')
     .then(r => r.json())
-    .then(styles => {
-        const grid = document.getElementById('styleGrid');
-        grid.innerHTML = styles.map(s => `
-            <div class="style-card">
-                <div class="emoji">${s.preview}</div>
-                <div class="name">${s.name}</div>
-                <div class="desc">${STYLE_DESCS[s.id] || ''}</div>
-            </div>
-        `).join('');
-    })
-    .catch(() => {
-        // Fallback if API is down
-        document.getElementById('styleGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">風格載入中...</p>';
-    });
+    .then(styles => renderStyles(styles))
+    .catch(() => renderStyles(FALLBACK_STYLES));
 </script>
 </body>
 </html>
