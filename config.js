@@ -2,7 +2,7 @@
 // Set backend URL: localStorage.setItem('cf_backend', 'https://xxxx.ngrok-free.dev')
 const CF = {
   get api() {
-    return localStorage.getItem('cf_backend') || 'https://interstaminal-unvirtuously-gennie.ngrok-free.dev';
+    return localStorage.getItem('cf_backend') || 'https://interstaminal-unvirtuously-gennie.ngrok-free.dev/comicforge';
   },
   get token() {
     return localStorage.getItem('cf_token') || '';
