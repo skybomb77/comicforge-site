@@ -4,6 +4,9 @@ const CF = {
   get api() {
     return localStorage.getItem('cf_backend') || 'https://interstaminal-unvirtuously-gennie.ngrok-free.dev/comicforge';
   },
+  get auth_api() {
+    return localStorage.getItem('cf_auth_backend') || 'https://interstaminal-unvirtuously-gennie.ngrok-free.dev/auth';
+  },
   get token() {
     return localStorage.getItem('cf_token') || '';
   },

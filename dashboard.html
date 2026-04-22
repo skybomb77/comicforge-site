@@ -64,7 +64,7 @@
 
 <script src="config.js"></script>
 <script>
-if (!CF.requireLogin()) throw '';
+if (!CF.requireLogin()) {}
 
 async function init() {
     const [meRes, projRes] = await Promise.all([
@@ -94,7 +94,7 @@ async function init() {
             el.innerHTML = '<div class="projects">' + projects.map(p => `
                 <div class="proj">
                     <div class="title">${p.title || '未命名'}</div>
-                    <div class="meta">${p.style} · ${p.total_panels} 格 · ${new Date(p.created).toLocaleDateString('zh-TW')}</div>
+                    <div class="meta">${p.style} · ${p.total_panels} 格 · ${new Date(p.created_at).toLocaleDateString('zh-TW')}</div>
                     <div class="status ${p.status}">${p.status === 'done' ? '完成' : p.status === 'generating' ? '生成中' : p.status}</div>
                 </div>
             `).join('') + '</div>';
